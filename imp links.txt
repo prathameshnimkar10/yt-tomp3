@@ -1,1 +1,0 @@
-https://code-b.dev/blog/building-desktop-applications-using-python
