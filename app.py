@@ -3,9 +3,10 @@ import yt_dlp
 import requests
 import threading
 import webbrowser
-from PIL import Image, ImageTk
-from io import BytesIO
 import tkinter as tk
+from PIL import Image, ImageTk
+from queue import Queue
+from io import BytesIO
 from tkinter import filedialog, messagebox, ttk
 
 # https://youtu.be/yiJ5k2vBtlw?si=bIQL31WQz5x4TRfp
@@ -31,7 +32,7 @@ def process_download():
     save_path = output_dir if not dir_var.get() else dir_var.get()
 
     progress_bar["value"] = 0
-    progress_label.config(text = "In progres...", fg="blue")
+    progress_label.config(text = "In progress...", fg="blue")
     open_folder_button.pack_forget()
 
     yt_opts = {
@@ -74,11 +75,16 @@ def process_download():
 def update_progress(d):
     if d['status'] == 'downloading':
         try:
-            percent = d['percent_str'].strip().replace('%', '')
-            progress_bar["value"] = float(percent)
-            root.update_idletasks()
-        except:
-            pass
+            downloaded_bytes = d.get('downloaded_bytes', 0)
+            total_bytes = d.get('total_bytes', None)
+
+            if total_bytes and total_bytes > 0:
+                percent = (downloaded_bytes / total_bytes) * 100
+                progress_bar["value"] = percent
+                progress_label.config(text=f"Downloading... {percent:.2f}%")
+                root.update_idletasks()
+        except Exception as e:
+            print(f"Progress Bar Error: {e}")
 
 def download_thumbnail(thumbnail_url, song_title, save_path):
     try:
@@ -99,6 +105,12 @@ def browse_directory():
 def open_folder():
     save_path = output_dir if not dir_var.get() else dir_var.get()
     webbrowser.open(save_path)
+
+def refresh_fields():
+    url_entry.delete(0, tk.END)
+    progress_bar["value"] = 0
+    progress_label.config(text="")
+    status_label.config(text="", fg="black")
 
 root = tk.Tk()
 root.title("YT to MP3 Downloader!")
@@ -143,5 +155,8 @@ status_label = tk.Label(frame, text="", font=("Arial", 12), fg="black", bg="#F4F
 status_label.pack(pady=5)
 
 open_folder_button = tk.Button(frame, text="Open Folder to view new song?", command=open_folder, font=("Arial", 11, "bold"), bg="#007BFF", fg="white", relief="flat", padx=10, pady=5)
+
+refresh_button = tk.Button(frame, text="Refresh Fields", command=refresh_fields, font=("Arial", 12, "bold"), bg="gray", fg="white", relief="flat", padx=10, pady=5)
+refresh_button.pack(pady=5)
 
 root.mainloop()
