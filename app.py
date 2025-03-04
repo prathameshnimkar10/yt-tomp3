@@ -5,7 +5,6 @@ import threading
 import webbrowser
 import tkinter as tk
 from PIL import Image, ImageTk
-from queue import Queue
 from io import BytesIO
 from tkinter import filedialog, messagebox, ttk
 
@@ -38,18 +37,23 @@ def process_download():
     yt_opts = {
         'format': 'bestaudio/best',
         'outtmpl': os.path.join(save_path, "%(title)s.%(ext)s"),
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '320',
-        }],
-        'writethumbnails': True,
-        'embedthumbnails': True,
+        'postprocessors': [
+            {
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '320',
+            },
+            {
+                'key': 'EmbedThumbnail',
+            }
+        ],
+        'writethumbnail': True,
+        'embedthumbnail': True,
+        'addmetadata': True,
         'postprocessor_args': [
             '-metadata', 'title=%(title)s',
-            '-metadata', 'artist=%(title)s',
+            '-metadata', 'artist=%(uploader)s',
         ],
-        'quiet': False,
         'ffmpeg_location': ffmpeg_path,
         'progress_hooks': [update_progress],
     }
@@ -58,19 +62,15 @@ def process_download():
         with yt_dlp.YoutubeDL(yt_opts) as yt:
             info_dict = yt.extract_info(url, download=True)
             song_title = info_dict.get('title')
-            thumbnail_url = info_dict.get('thumbnail')
 
-        if thumbnail_url:
-            download_thumbnail(thumbnail_url, song_title, save_path)
-
-        status_label.config(text = f"Downloaded: {song_title}.mp3", fg='green')
-        messagebox.showinfo("Success!", f"Downloaded complete:\n{song_title}.mp3")
+        status_label.config(text=f"Downloaded: {song_title}.mp3 (with Thumbnail)", fg='green')
+        messagebox.showinfo("Success!", f"Download complete:\n{song_title}.mp3 with embedded album art.")
 
         open_folder_button.pack(pady=10)
     
     except Exception as e:
-        status_label.config(text = "Aww hell naw!", fg = "red")
-        messagebox.showinfo(f"Download Failed,{e}, womp womp.")
+        status_label.config(text="Aww hell naw!", fg="red")
+        messagebox.showerror("Download Failed", f"Error: {e}")
 
 def update_progress(d):
     if d['status'] == 'downloading':
