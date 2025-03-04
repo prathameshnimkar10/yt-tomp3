@@ -1,0 +1,19 @@
+ffmpeg/
+ffmpeg-7.1-essentials_build.zip
+build/
+dist/
+
+imp\ links.txt
+app.spec
+uninstall.spec
+
+# .gitignore
+
+.DS_Store
+Thumbs.db
+
+.vscode/
+.venv
+.idea/
+*.pyc
+__pycache__/
