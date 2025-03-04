@@ -1,1 +1,2 @@
 pyinstaller --onefile --windowed --icon=logo.ico --add-data "ffmpeg;ffmpeg" app.py
+pyinstaller --onefile --windowed --icon=logo.ico uninstall.py
